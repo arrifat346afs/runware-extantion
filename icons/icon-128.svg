@@ -1,0 +1,30 @@
+
+    <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <rect width="128" height="128" fill="url(#grad)" rx="12.8"/>
+        
+        <!-- Robot head -->
+        <rect x="25.6" y="32" width="76.8" height="51.2" fill="white" rx="6.4"/>
+        
+        <!-- Robot eyes -->
+        <rect x="38.4" y="44.8" width="12.8" height="12.8" fill="#667eea"/>
+        <rect x="76.8" y="44.8" width="12.8" height="12.8" fill="#667eea"/>
+        
+        <!-- Antenna -->
+        <line x1="64" y1="32" x2="64" y2="12.8" stroke="white" stroke-width="2.56"/>
+        <circle cx="64" cy="12.8" r="3.84" fill="white"/>
+        
+        <!-- Image icon -->
+        <rect x="32" y="89.6" width="64" height="32" fill="rgba(255,255,255,0.9)" stroke="#667eea" stroke-width="1"/>
+        
+        <!-- Mountain shape -->
+        <polygon points="38.4,115.2 51.2,102.4 76.8,108.8 89.6,96 89.6,115.2" fill="#667eea"/>
+        
+        <!-- Sun -->
+        <circle cx="83.2" cy="99.84" r="3.84" fill="#667eea"/>
+    </svg>

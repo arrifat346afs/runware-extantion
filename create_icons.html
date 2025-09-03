@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="128" height="128" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="downloadIcon(16)">Download 16x16</button>
+    <button onclick="downloadIcon(32)">Download 32x32</button>
+    <button onclick="downloadIcon(48)">Download 48x48</button>
+    <button onclick="downloadIcon(128)">Download 128x128</button>
+
+    <script>
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Draw background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw robot/AI icon
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const scale = size / 128;
+            
+            // Robot head
+            ctx.fillStyle = 'white';
+            ctx.fillRect(centerX - 25 * scale, centerY - 20 * scale, 50 * scale, 40 * scale);
+            
+            // Robot eyes
+            ctx.fillStyle = '#667eea';
+            ctx.fillRect(centerX - 15 * scale, centerY - 10 * scale, 8 * scale, 8 * scale);
+            ctx.fillRect(centerX + 7 * scale, centerY - 10 * scale, 8 * scale, 8 * scale);
+            
+            // Robot antenna
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2 * scale;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 20 * scale);
+            ctx.lineTo(centerX, centerY - 35 * scale);
+            ctx.stroke();
+            
+            // Antenna tip
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 35 * scale, 3 * scale, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Image/picture icon overlay
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillRect(centerX - 20 * scale, centerY + 5 * scale, 40 * scale, 25 * scale);
+            
+            // Picture frame
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 1 * scale;
+            ctx.strokeRect(centerX - 20 * scale, centerY + 5 * scale, 40 * scale, 25 * scale);
+            
+            // Mountain/image icon
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.moveTo(centerX - 15 * scale, centerY + 25 * scale);
+            ctx.lineTo(centerX - 5 * scale, centerY + 15 * scale);
+            ctx.lineTo(centerX + 5 * scale, centerY + 20 * scale);
+            ctx.lineTo(centerX + 15 * scale, centerY + 10 * scale);
+            ctx.lineTo(centerX + 15 * scale, centerY + 25 * scale);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Sun/circle
+            ctx.beginPath();
+            ctx.arc(centerX + 10 * scale, centerY + 12 * scale, 3 * scale, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            return canvas;
+        }
+        
+        function downloadIcon(size) {
+            const canvas = createIcon(size);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Show preview
+        const previewCanvas = document.getElementById('canvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const iconCanvas = createIcon(128);
+        previewCtx.drawImage(iconCanvas, 0, 0);
+    </script>
+</body>
+</html>

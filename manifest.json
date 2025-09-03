@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "AI Image Generation Automator",
+  "version": "1.0.0",
+  "description": "Automate AI image generation by processing multiple prompts from text files",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://my.runware.ai/playground?modelAIR=runware%3A101%401&modelArchitecture=flux1d"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Image Automator",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg",
+      "48": "icons/icon-48.svg",
+      "128": "icons/icon-128.svg"
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ai-image-automator@example.com",
+      "strict_min_version": "109.0"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "32": "icons/icon-32.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html", "styles.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
