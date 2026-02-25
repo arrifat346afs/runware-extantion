@@ -59,10 +59,10 @@
         
         <div>
             <label for="prompt">Enter your prompt:</label>
-            <textarea id="prompt" placeholder="Type your prompt here to start..."></textarea>
+            <textarea placeholder="Type your prompt here to start..." name="" id="" class="w-full bg-transparent outline-none !text-black resize-none transition-all duration-500 text-[16px] focus:border-a focus:shadow-none focus:outline-0 cursor-text scrollable-content h-[50px]" style="scrollbar-width: none; height: 48px;"></textarea>
         </div>
-        
-        <button id="generateBtn" disabled>Generate</button>
+
+        <button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeLarge MuiButton-containedSizeLarge MuiButton-colorPrimary MuiButton-fullWidth Mui-disabled MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeLarge MuiButton-containedSizeLarge MuiButton-colorPrimary MuiButton-fullWidth !bg-runware-purple-light !text-white !flex !items-center !justify-center gap-1 opacity-20 css-kcbqm3" tabindex="-1" type="button" id="submit-btn-5dt" disabled=""><span>Generate</span></button>
         
         <div class="status" id="status">
             Ready to generate images. Enter a prompt to enable the generate button.
@@ -70,8 +70,8 @@
     </div>
 
     <script>
-        const textarea = document.getElementById('prompt');
-        const button = document.getElementById('generateBtn');
+        const textarea = document.querySelector('textarea.scrollable-content');
+        const button = document.getElementById('submit-btn-5dt');
         const status = document.getElementById('status');
         
         // Enable/disable button based on textarea content
