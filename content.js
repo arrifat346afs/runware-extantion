@@ -26,11 +26,11 @@ class AIImageAutomationEngine {
 
         // Alternative selectors based on the provided HTML structure
         this.specificTextareaSelector = 'textarea.w-full.bg-transparent.outline-none';
-        this.specificButtonSelector = 'button.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary';
+        this.specificButtonSelector = 'button.MuiButtonBase-root.MuiButton-containedPrimary';
 
-        // Runware-specific selectors
-        this.runwareTextareaSelector = 'textarea[placeholder="Type your prompt here to start..."]';
-        this.runwareButtonSelector = 'button#submit-btn-5dt, button[id^="submit-btn"]';
+        // Runware-specific selectors (primary - most specific)
+        this.runwareTextareaSelector = 'textarea.scrollable-content[placeholder="Type your prompt here to start..."]';
+        this.runwareButtonSelector = 'button.MuiButtonBase-root[id^="submit-btn"], button#submit-btn-5dt, button[id^="submit-btn"]';
         
         this.bindMessageListener();
         console.log('🤖 AI Image Automator: Engine initialized successfully');
