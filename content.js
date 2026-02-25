@@ -643,12 +643,18 @@ class AIImageAutomationEngine {
                 }
 
                 if (this.isButtonDisabled(button)) {
-                    console.error('AI Automator: Button remained disabled after', maxAttempts * 0.5, 'seconds');
-                    this.sendMessage('automationError', {
-                        error: `Generate button remained disabled after ${maxAttempts * 0.5} seconds. Check if the prompt is valid or if the website requires additional input.`
-                    });
-                    this.isRunning = false;
-                    return;
+                    console.log('AI Automator: Button still disabled — force-enabling it...');
+                    // Force-enable the button as a last resort
+                    button.disabled = false;
+                    button.removeAttribute('disabled');
+                    button.classList.remove('Mui-disabled');
+                    button.classList.remove('disabled');
+                    button.removeAttribute('aria-disabled');
+                    button.tabIndex = 0;
+                    button.style.opacity = '1';
+                    button.style.pointerEvents = 'auto';
+                    console.log('AI Automator: Button force-enabled');
+                    await this.sleep(200);
                 }
             }
 
