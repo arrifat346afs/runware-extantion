@@ -367,38 +367,28 @@ class AIImageAutomator {
             this.isRunning = true;
             this.startBtn.disabled = true;
             this.stopBtn.disabled = false;
-            this.status.textContent = 'Checking content script...';
+            this.status.textContent = 'Injecting into all frames...';
             this.status.classList.add('updating');
 
-            // First, check if content script is responding
+            // Always inject into ALL frames (including iframes like my.runware.ai).
+            // The content script guards against double-initialization itself.
             try {
-                await tabsAPI.sendMessage(targetTab.id, { action: 'ping' });
-            } catch (pingError) {
-                console.log('Content script not responding, injecting...');
-                this.status.textContent = 'Injecting content script...';
+                const runtimeAPI = typeof browser !== 'undefined' ? browser.runtime : chrome.runtime;
+                const injectResponse = await runtimeAPI.sendMessage({
+                    action: 'injectContentScript',
+                    tabId: targetTab.id
+                });
 
-                try {
-                    // Use background script to inject content script
-                    const runtimeAPI = typeof browser !== 'undefined' ? browser.runtime : chrome.runtime;
-                    const injectResponse = await runtimeAPI.sendMessage({
-                        action: 'injectContentScript',
-                        tabId: targetTab.id
-                    });
-
-                    if (!injectResponse || !injectResponse.success) {
-                        throw new Error(`Injection failed: ${injectResponse?.error || 'Unknown error'}`);
-                    }
-
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                } catch (injectError) {
-                    console.error('Failed to inject content script:', injectError);
-                    this.status.textContent = `Failed to inject content script: ${injectError.message}`;
-                    this.isRunning = false;
-                    this.startBtn.disabled = false;
-                    this.stopBtn.disabled = true;
-                    this.status.classList.remove('updating');
-                    return;
+                if (!injectResponse || !injectResponse.success) {
+                    console.warn('Injection warning:', injectResponse?.error);
+                    // Non-fatal: content script may already be present via manifest
                 }
+
+                // Give frames a moment to initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (injectError) {
+                console.warn('Injection warning (non-fatal):', injectError.message);
+                // Non-fatal: the manifest may have already injected the script
             }
 
             this.status.textContent = 'Starting automation...';

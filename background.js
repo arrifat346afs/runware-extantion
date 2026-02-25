@@ -168,8 +168,9 @@ class BackgroundManager {
             }
 
             // Manifest V3 uses chrome.scripting API
+            // allFrames: true ensures the script is injected into iframes too
             const results = await chrome.scripting.executeScript({
-                target: { tabId: tabId },
+                target: { tabId: tabId, allFrames: true },
                 files: ['content.js']
             });
 
