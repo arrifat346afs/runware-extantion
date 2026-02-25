@@ -12,7 +12,8 @@
   ],
 
   "host_permissions": [
-    "https://my.runware.ai/playground?modelAIR=runware%3A101%401&modelArchitecture=flux1d"
+    "https://runware.ai/*",
+    "https://*.runware.ai/*"
   ],
 
   "background": {
@@ -35,7 +36,7 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_end",
-      "all_frames": false
+      "all_frames": true
     }
   ],
 
