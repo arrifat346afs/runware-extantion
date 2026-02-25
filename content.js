@@ -183,78 +183,43 @@ class AIImageAutomationEngine {
     findGenerateButton() {
         console.log('🔍 Finding generate button...');
 
-        // Try Runware-specific selector first
-        let button = document.querySelector(this.runwareButtonSelector);
-        console.log('Runware button selector result:', !!button);
-
-        // Try specific selector
-        if (!button) {
-            button = document.querySelector(this.specificButtonSelector);
-            console.log('Specific button selector result:', !!button);
-        }
-
-        // Try generic selectors
-        if (!button) {
-            button = document.querySelector(this.generateButtonSelector);
-            console.log('Generic button selector result:', !!button);
-        }
-
-        // If still not found, look for buttons with generate-related text
-        if (!button) {
-            console.log('Searching through all buttons...');
-            const buttons = document.querySelectorAll('button');
-            console.log('Found', buttons.length, 'buttons total');
-
-            for (const btn of buttons) {
-                const text = btn.textContent?.toLowerCase().trim() || '';
-                const id = btn.id?.toLowerCase() || '';
-                const className = btn.className?.toLowerCase() || '';
-
-                console.log('Checking button:', {
-                    text,
-                    id,
-                    className,
-                    disabled: btn.disabled,
-                    hasDisabledAttr: btn.hasAttribute('disabled'),
-                    hasMuiDisabled: btn.classList.contains('Mui-disabled')
-                });
-
-                if (text === 'generate' ||
-                    text.includes('generate') ||
-                    text.includes('create') ||
-                    text.includes('submit') ||
-                    text.includes('run') ||
-                    className.includes('generate') ||
-                    className.includes('submit') ||
-                    id.includes('generate') ||
-                    id.includes('submit')) {
-                    // Make sure the button is visible (disabled is OK, we'll handle that later)
-                    const style = window.getComputedStyle(btn);
-                    if (style.display !== 'none' && style.visibility !== 'hidden') {
-                        button = btn;
-                        console.log('Found matching button by content/class/id!');
-                        break;
-                    }
-                }
+        // Priority 1: exact id match (submit-btn-XXXX pattern) that contains "Generate"
+        const allButtons = document.querySelectorAll('button[id^="submit-btn"]');
+        console.log(`Found ${allButtons.length} button(s) with id^="submit-btn"`);
+        for (const btn of allButtons) {
+            const text = btn.textContent?.trim() || '';
+            console.log('  → id:', btn.id, 'text:', text);
+            if (text.toLowerCase().includes('generate')) {
+                console.log('✅ Found Generate button by id^=submit-btn:', btn.id);
+                return btn;
             }
         }
 
-        // Last resort: find any visible button
-        if (!button) {
-            console.log('Last resort: finding any visible button...');
-            const buttons = document.querySelectorAll('button');
-            for (const btn of buttons) {
-                const style = window.getComputedStyle(btn);
-                if (style.display !== 'none' && style.visibility !== 'hidden' && btn.offsetHeight > 0) {
-                    button = btn;
-                    console.log('Using fallback button:', btn);
-                    break;
-                }
+        // Priority 2: MuiButton that contains span>Generate
+        const muiButtons = document.querySelectorAll('button.MuiButtonBase-root');
+        console.log(`Found ${muiButtons.length} MuiButtonBase-root button(s)`);
+        for (const btn of muiButtons) {
+            const span = btn.querySelector('span');
+            if (span && span.textContent?.trim().toLowerCase() === 'generate') {
+                console.log('✅ Found Generate button via MuiButtonBase-root + span');
+                return btn;
             }
         }
 
-        console.log('Final button selection:', button);
-        return button;
+        // Priority 3: any button whose direct text/span says exactly "Generate"
+        const allBtns = document.querySelectorAll('button');
+        for (const btn of allBtns) {
+            const span = btn.querySelector('span');
+            const spanText = span?.textContent?.trim().toLowerCase();
+            const style = window.getComputedStyle(btn);
+            if (spanText === 'generate' && style.display !== 'none' && style.visibility !== 'hidden') {
+                console.log('✅ Found Generate button via span text');
+                return btn;
+            }
+        }
+
+        console.log('❌ No Generate button found');
+        return null;
     }
 
     isButtonDisabled(button) {
