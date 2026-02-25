@@ -389,58 +389,45 @@ class AIImageAutomationEngine {
             });
         }
 
-        // Wait for elements to appear in DOM (React SPA may render them late)
-        console.log('AI Automator: Waiting for page elements to render...');
-        this.sendMessage('updateStatus', { status: 'Waiting for page elements to render...' });
-
+        // STEP 1 — Quick frame check (5 seconds).
+        // With all_frames:true the script runs in EVERY frame (main + iframes).
+        // Only the frame that actually contains the textarea should run automation.
+        // Frames without a textarea bail silently so they don't send false errors.
+        console.log('AI Automator: Quick frame check (5s) — am I the right frame?', window.location.href);
         let textarea = null;
-        let button = null;
-        const maxWaitSeconds = 30;
-        const pollInterval = 1000;
-        const maxPolls = maxWaitSeconds * (1000 / pollInterval);
-
-        for (let attempt = 0; attempt < maxPolls; attempt++) {
-            // Log what's in the DOM right now
-            const allTextareas = document.querySelectorAll('textarea');
-            const allButtons = document.querySelectorAll('button');
-            console.log(`AI Automator: Poll ${attempt + 1}/${maxPolls} — textareas: ${allTextareas.length}, buttons: ${allButtons.length}`);
-
+        for (let i = 0; i < 5; i++) {
             textarea = this.findTextarea();
-            button = this.findGenerateButton();
-
-            if (textarea && button) {
-                console.log('AI Automator: ✅ Found both textarea and button!');
-                break;
-            }
-
-            if (textarea && !button) {
-                console.log('AI Automator: Found textarea but not button, still waiting...');
-            }
-            if (!textarea && button) {
-                console.log('AI Automator: Found button but not textarea, still waiting...');
-            }
-
-            await this.sleep(pollInterval);
+            if (textarea) break;
+            await this.sleep(1000);
         }
 
         if (!textarea) {
-            console.error('AI Automator: ❌ No textarea found after waiting', maxWaitSeconds, 'seconds');
-            // Dump the full DOM for debugging
-            console.log('AI Automator: Full page HTML length:', document.documentElement.innerHTML.length);
-            console.log('AI Automator: All textareas:', document.querySelectorAll('textarea').length);
-            console.log('AI Automator: All inputs:', document.querySelectorAll('input').length);
-            console.log('AI Automator: All [contenteditable]:', document.querySelectorAll('[contenteditable]').length);
-            this.sendMessage('automationError', {
-                error: 'Could not find the prompt textarea after waiting ' + maxWaitSeconds + ' seconds. Make sure you are on the Runware playground page and the prompt area is visible.'
-            });
+            // This frame doesn't have the textarea — silently stop.
+            // The correct frame (iframe) will handle it.
+            console.log('AI Automator: No textarea in this frame — bailing silently:', window.location.href);
             this.isRunning = false;
             return;
         }
 
+        // STEP 2 — We're in the right frame. Now wait up to 25s for the button too.
+        console.log('AI Automator: ✅ Textarea found in this frame! Waiting for button...');
+        this.sendMessage('updateStatus', { status: 'Found textarea, waiting for Generate button...' });
+
+        let button = null;
+        for (let attempt = 0; attempt < 25; attempt++) {
+            button = this.findGenerateButton();
+            if (button) {
+                console.log('AI Automator: ✅ Found Generate button!');
+                break;
+            }
+            console.log(`AI Automator: Button poll ${attempt + 1}/25 — buttons on page: ${document.querySelectorAll('button').length}`);
+            await this.sleep(1000);
+        }
+
         if (!button) {
-            console.error('AI Automator: ❌ No button found after waiting', maxWaitSeconds, 'seconds');
+            console.error('AI Automator: ❌ No Generate button found');
             this.sendMessage('automationError', {
-                error: 'Could not find the Generate button after waiting ' + maxWaitSeconds + ' seconds.'
+                error: 'Could not find the Generate button. Make sure the Runware playground is fully loaded.'
             });
             this.isRunning = false;
             return;
