@@ -526,9 +526,9 @@ class AIImageAutomationEngine {
         try {
             console.log('AI Automator: Processing prompt', this.currentIndex + 1, ':', currentPrompt);
 
-            // Use stored elements or find them again
-            let textarea = this.foundTextarea || this.findTextarea();
-            let button = this.foundButton || this.findGenerateButton();
+            // Always re-find elements (React SPA may re-render and invalidate old refs)
+            let textarea = this.findTextarea();
+            let button = this.findGenerateButton();
 
             console.log('AI Automator: Found elements - textarea:', !!textarea, 'button:', !!button);
 
