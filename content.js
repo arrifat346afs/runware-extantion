@@ -751,11 +751,13 @@ class AIImageAutomationEngine {
     }
 }
 
-// Initialize the automation engine
-// With all_frames: true the script runs in every frame (main + iframes).
-// Only show the indicator in the top-level frame to avoid duplicates.
-console.log('AI Image Automator: Content script loaded in frame:', window.location.href);
-const automationEngine = new AIImageAutomationEngine();
+// Guard against double-injection (popup may explicitly inject on top of manifest injection)
+if (window.__aiAutomatorInitialized) {
+    console.log('AI Image Automator: Already initialized in this frame, skipping:', window.location.href);
+} else {
+    window.__aiAutomatorInitialized = true;
+    console.log('AI Image Automator: Content script loaded in frame:', window.location.href);
+    window.automationEngine = new AIImageAutomationEngine();
 
 if (window === window.top) {
     // Only add the visual indicator in the top-level page
