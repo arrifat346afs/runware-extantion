@@ -142,61 +142,42 @@ class AIImageAutomationEngine {
     findTextarea() {
         console.log('🔍 Finding textarea...');
 
-        // Try Runware-specific selector first
-        let textarea = document.querySelector(this.runwareTextareaSelector);
-        console.log('Runware textarea selector result:', !!textarea);
+        // All selectors to try, in priority order
+        const selectors = [
+            'textarea[placeholder="Type your prompt here to start..."]',
+            'textarea.scrollable-content',
+            'textarea.w-full.bg-transparent',
+            'textarea[placeholder*="prompt"]',
+            'textarea[placeholder*="describe"]',
+            'textarea'
+        ];
 
-        // Try specific selector
-        if (!textarea) {
-            textarea = document.querySelector(this.specificTextareaSelector);
-            console.log('Specific textarea selector result:', !!textarea);
-        }
-
-        // Try generic selectors
-        if (!textarea) {
-            textarea = document.querySelector(this.textareaSelector);
-            console.log('Generic textarea selector result:', !!textarea);
-        }
-
-        // If still not found, try to find any textarea that might be for prompts
-        if (!textarea) {
-            console.log('Searching through all textareas...');
-            const textareas = document.querySelectorAll('textarea');
-            console.log('Found', textareas.length, 'textareas total');
-
-            for (const ta of textareas) {
-                const placeholder = ta.placeholder?.toLowerCase() || '';
-                const className = ta.className?.toLowerCase() || '';
-                const name = ta.name?.toLowerCase() || '';
-
-                console.log('Checking textarea:', { placeholder, className, name });
-
-                if (placeholder.includes('prompt') ||
-                    placeholder.includes('describe') ||
-                    placeholder.includes('type your prompt') ||
-                    placeholder.includes('enter prompt') ||
-                    className.includes('prompt') ||
-                    name.includes('prompt')) {
-                    textarea = ta;
-                    console.log('Found matching textarea by content!');
-                    break;
+        for (const selector of selectors) {
+            const elements = document.querySelectorAll(selector);
+            console.log(`Selector "${selector}" found:`, elements.length);
+            for (const el of elements) {
+                const style = window.getComputedStyle(el);
+                if (style.display !== 'none' && style.visibility !== 'hidden' && el.offsetHeight > 0) {
+                    console.log('✅ Found visible textarea with selector:', selector);
+                    return el;
                 }
             }
         }
 
-        // Last resort: find the first visible textarea
-        if (!textarea) {
-            const textareas = document.querySelectorAll('textarea');
-            for (const ta of textareas) {
-                const style = window.getComputedStyle(ta);
-                if (style.display !== 'none' && style.visibility !== 'hidden' && ta.offsetHeight > 0) {
-                    textarea = ta;
-                    break;
+        // Also check inside shadow DOMs and iframes
+        const allElements = document.querySelectorAll('*');
+        for (const el of allElements) {
+            if (el.shadowRoot) {
+                const shadowTextarea = el.shadowRoot.querySelector('textarea');
+                if (shadowTextarea) {
+                    console.log('✅ Found textarea inside shadow DOM');
+                    return shadowTextarea;
                 }
             }
         }
 
-        return textarea;
+        console.log('❌ No textarea found');
+        return null;
     }
     
     findGenerateButton() {
