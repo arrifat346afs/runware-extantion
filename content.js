@@ -424,71 +424,61 @@ class AIImageAutomationEngine {
             });
         }
 
-        // Debug: Log all textareas and buttons found
-        console.log('AI Automator Debug: Looking for elements...');
-        const allTextareas = document.querySelectorAll('textarea');
-        const allButtons = document.querySelectorAll('button');
-        console.log('Found textareas:', allTextareas.length);
-        console.log('Found buttons:', allButtons.length);
+        // Wait for elements to appear in DOM (React SPA may render them late)
+        console.log('AI Automator: Waiting for page elements to render...');
+        this.sendMessage('updateStatus', { status: 'Waiting for page elements to render...' });
 
-        allTextareas.forEach((ta, i) => {
-            console.log(`Textarea ${i}:`, {
-                placeholder: ta.placeholder,
-                className: ta.className,
-                name: ta.name,
-                id: ta.id,
-                visible: ta.offsetHeight > 0 && window.getComputedStyle(ta).display !== 'none'
-            });
-        });
+        let textarea = null;
+        let button = null;
+        const maxWaitSeconds = 30;
+        const pollInterval = 1000;
+        const maxPolls = maxWaitSeconds * (1000 / pollInterval);
 
-        allButtons.forEach((btn, i) => {
-            console.log(`Button ${i}:`, {
-                text: btn.textContent?.trim(),
-                className: btn.className,
-                id: btn.id,
-                type: btn.type,
-                disabled: btn.disabled,
-                visible: btn.offsetHeight > 0 && window.getComputedStyle(btn).display !== 'none'
-            });
-        });
+        for (let attempt = 0; attempt < maxPolls; attempt++) {
+            // Log what's in the DOM right now
+            const allTextareas = document.querySelectorAll('textarea');
+            const allButtons = document.querySelectorAll('button');
+            console.log(`AI Automator: Poll ${attempt + 1}/${maxPolls} — textareas: ${allTextareas.length}, buttons: ${allButtons.length}`);
 
-        // Verify that we can find the necessary elements
-        let textarea = this.findTextarea();
-        let button = this.findGenerateButton();
+            textarea = this.findTextarea();
+            button = this.findGenerateButton();
 
-        console.log('Selected textarea:', textarea);
-        console.log('Selected button:', button);
+            if (textarea && button) {
+                console.log('AI Automator: ✅ Found both textarea and button!');
+                break;
+            }
+
+            if (textarea && !button) {
+                console.log('AI Automator: Found textarea but not button, still waiting...');
+            }
+            if (!textarea && button) {
+                console.log('AI Automator: Found button but not textarea, still waiting...');
+            }
+
+            await this.sleep(pollInterval);
+        }
 
         if (!textarea) {
-            // Last resort: try to find ANY textarea
-            const allTextareas = document.querySelectorAll('textarea');
-            if (allTextareas.length > 0) {
-                textarea = allTextareas[0]; // Use the first textarea found
-                console.log('Using fallback textarea:', textarea);
-            } else {
-                this.sendMessage('automationError', { error: 'Could not find any textarea on this page. Make sure you are on an AI image generation website.' });
-                this.isRunning = false;
-                return;
-            }
+            console.error('AI Automator: ❌ No textarea found after waiting', maxWaitSeconds, 'seconds');
+            // Dump the full DOM for debugging
+            console.log('AI Automator: Full page HTML length:', document.documentElement.innerHTML.length);
+            console.log('AI Automator: All textareas:', document.querySelectorAll('textarea').length);
+            console.log('AI Automator: All inputs:', document.querySelectorAll('input').length);
+            console.log('AI Automator: All [contenteditable]:', document.querySelectorAll('[contenteditable]').length);
+            this.sendMessage('automationError', {
+                error: 'Could not find the prompt textarea after waiting ' + maxWaitSeconds + ' seconds. Make sure you are on the Runware playground page and the prompt area is visible.'
+            });
+            this.isRunning = false;
+            return;
         }
 
         if (!button) {
-            // Last resort: try to find ANY button that might be a submit button
-            const allButtons = document.querySelectorAll('button');
-            for (const btn of allButtons) {
-                const style = window.getComputedStyle(btn);
-                if (style.display !== 'none' && style.visibility !== 'hidden' && btn.offsetHeight > 0) {
-                    button = btn;
-                    console.log('Using fallback button:', button);
-                    break;
-                }
-            }
-
-            if (!button) {
-                this.sendMessage('automationError', { error: 'Could not find any clickable button on this page. Make sure you are on an AI image generation website.' });
-                this.isRunning = false;
-                return;
-            }
+            console.error('AI Automator: ❌ No button found after waiting', maxWaitSeconds, 'seconds');
+            this.sendMessage('automationError', {
+                error: 'Could not find the Generate button after waiting ' + maxWaitSeconds + ' seconds.'
+            });
+            this.isRunning = false;
+            return;
         }
 
         // Store the found elements for later use
