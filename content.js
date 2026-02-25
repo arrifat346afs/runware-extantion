@@ -289,36 +289,121 @@ class AIImageAutomationEngine {
     async setTextareaValue(textarea, text) {
         console.log('🔧 Setting textarea value using multiple strategies...');
 
-        // Strategy 1: Direct value setting with React support
+        // Focus the textarea first
         textarea.focus();
+        textarea.click();
+        await this.sleep(200);
+
+        // Strategy 1: Select all existing text and delete it
+        textarea.select();
+        document.execCommand('selectAll', false, null);
+        document.execCommand('delete', false, null);
         await this.sleep(100);
 
-        // Clear first
-        textarea.value = '';
+        // Strategy 2: Use execCommand('insertText') — this is the most reliable
+        // way to trigger React/Vue/Angular state updates because it simulates
+        // actual user typing and fires native input events that frameworks listen to
+        console.log('🔧 Trying execCommand insertText...');
+        const insertSuccess = document.execCommand('insertText', false, text);
+        console.log('🔧 execCommand insertText result:', insertSuccess);
 
-        // Set value multiple ways
-        textarea.value = text;
-
-        // React/modern framework support
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-        if (nativeInputValueSetter) {
-            nativeInputValueSetter.call(textarea, text);
+        if (insertSuccess && textarea.value === text) {
+            console.log('🔧 ✅ execCommand insertText worked!');
+            return true;
         }
 
-        // Strategy 2: Simulate user input
-        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-        Object.defineProperty(inputEvent, 'target', { value: textarea, enumerable: true });
-        textarea.dispatchEvent(inputEvent);
+        // Strategy 3: Native setter + React synthetic event
+        console.log('🔧 Trying native setter + InputEvent...');
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype, "value"
+        ).set;
 
-        // Strategy 3: Trigger change event
+        // Clear with native setter
+        nativeInputValueSetter.call(textarea, '');
+        textarea.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'deleteContentBackward' }));
+        await this.sleep(100);
+
+        // Set new value with native setter
+        nativeInputValueSetter.call(textarea, text);
+
+        // Dispatch InputEvent (not Event) — React 16+ listens for this
+        textarea.dispatchEvent(new InputEvent('input', {
+            bubbles: true,
+            cancelable: true,
+            inputType: 'insertText',
+            data: text
+        }));
+
+        // Also dispatch change event
         textarea.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
 
-        // Strategy 4: Keyboard events
-        textarea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true }));
-        textarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true }));
+        await this.sleep(100);
+
+        if (textarea.value === text) {
+            console.log('🔧 ✅ Native setter + InputEvent worked!');
+            return true;
+        }
+
+        // Strategy 4: Simulate clipboard paste
+        console.log('🔧 Trying simulated paste...');
+        textarea.focus();
+        textarea.select();
+        document.execCommand('selectAll', false, null);
+        document.execCommand('delete', false, null);
+        await this.sleep(100);
+
+        // Create a DataTransfer object for the paste event
+        const dataTransfer = new DataTransfer();
+        dataTransfer.setData('text/plain', text);
+
+        const pasteEvent = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: dataTransfer
+        });
+        textarea.dispatchEvent(pasteEvent);
+
+        // If paste didn't set the value, set it manually and fire events
+        if (textarea.value !== text) {
+            nativeInputValueSetter.call(textarea, text);
+            textarea.dispatchEvent(new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                inputType: 'insertFromPaste',
+                data: text
+            }));
+        }
+
+        await this.sleep(100);
+
+        // Strategy 5: Keyboard simulation as last resort
+        if (textarea.value !== text) {
+            console.log('🔧 Trying keyboard simulation...');
+            nativeInputValueSetter.call(textarea, '');
+            textarea.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+            await this.sleep(50);
+
+            for (const char of text) {
+                textarea.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+                textarea.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
+
+                // Append character using native setter
+                const currentVal = textarea.value;
+                nativeInputValueSetter.call(textarea, currentVal + char);
+                textarea.dispatchEvent(new InputEvent('input', {
+                    bubbles: true,
+                    inputType: 'insertText',
+                    data: char
+                }));
+
+                textarea.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
+            }
+        }
 
         console.log('🔧 Final textarea value:', textarea.value);
         console.log('🔧 Textarea value length:', textarea.value.length);
+        console.log('🔧 Expected text length:', text.length);
+        console.log('🔧 Values match:', textarea.value === text);
 
         return textarea.value === text;
     }
