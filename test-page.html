@@ -78,23 +78,35 @@
         textarea.addEventListener('input', function() {
             if (this.value.trim().length > 0) {
                 button.disabled = false;
+                button.removeAttribute('disabled');
+                button.classList.remove('Mui-disabled');
+                button.style.opacity = '1';
                 status.textContent = 'Ready to generate!';
             } else {
                 button.disabled = true;
+                button.setAttribute('disabled', '');
+                button.classList.add('Mui-disabled');
+                button.style.opacity = '0.2';
                 status.textContent = 'Ready to generate images. Enter a prompt to enable the generate button.';
             }
         });
-        
+
         // Simulate generation process
         button.addEventListener('click', function() {
             button.disabled = true;
+            button.setAttribute('disabled', '');
+            button.classList.add('Mui-disabled');
+            button.style.opacity = '0.2';
             status.textContent = 'Generating image... Please wait.';
-            
+
             // Simulate processing time
             setTimeout(() => {
                 status.textContent = 'Image generated successfully! Enter another prompt to continue.';
                 textarea.value = '';
                 button.disabled = true;
+                button.setAttribute('disabled', '');
+                button.classList.add('Mui-disabled');
+                button.style.opacity = '0.2';
             }, 2000);
         });
         
