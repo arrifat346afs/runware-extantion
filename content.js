@@ -800,39 +800,43 @@ class AIImageAutomationEngine {
 }
 
 // Initialize the automation engine
-console.log('AI Image Automator: Content script loaded');
+// With all_frames: true the script runs in every frame (main + iframes).
+// Only show the indicator in the top-level frame to avoid duplicates.
+console.log('AI Image Automator: Content script loaded in frame:', window.location.href);
 const automationEngine = new AIImageAutomationEngine();
 
-// Add visual indicator when extension is active
-const indicator = document.createElement('div');
-indicator.id = 'ai-automator-indicator';
-indicator.innerHTML = '🤖 AI Automator Ready';
-indicator.style.cssText = `
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 10000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    cursor: pointer;
-`;
+if (window === window.top) {
+    // Only add the visual indicator in the top-level page
+    const indicator = document.createElement('div');
+    indicator.id = 'ai-automator-indicator';
+    indicator.innerHTML = '🤖 AI Automator Ready';
+    indicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    `;
 
-document.body.appendChild(indicator);
+    document.body.appendChild(indicator);
 
-// Hide indicator after 3 seconds
-setTimeout(() => {
-    if (indicator.parentNode) {
-        indicator.style.opacity = '0';
-        setTimeout(() => {
-            if (indicator.parentNode) {
-                indicator.parentNode.removeChild(indicator);
-            }
-        }, 300);
-    }
-}, 3000);
+    // Hide indicator after 3 seconds
+    setTimeout(() => {
+        if (indicator.parentNode) {
+            indicator.style.opacity = '0';
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            }, 300);
+        }
+    }, 3000);
+}
